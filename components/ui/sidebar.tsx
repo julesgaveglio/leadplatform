@@ -15,7 +15,16 @@ const NAV_ITEMS = [
 
 export function Sidebar() {
   const pathname = usePathname()
-  const [collapsed, setCollapsed] = useState(false)
+  const [collapsed, setCollapsed] = useState(() => {
+    if (typeof window === 'undefined') return false
+    return localStorage.getItem('sidebar-collapsed') === 'true'
+  })
+
+  function toggleCollapsed() {
+    const next = !collapsed
+    setCollapsed(next)
+    localStorage.setItem('sidebar-collapsed', String(next))
+  }
 
   return (
     <>
@@ -28,7 +37,7 @@ export function Sidebar() {
         <div className={`flex items-center h-16 border-b border-border ${collapsed ? 'justify-center px-2' : 'justify-between px-4'}`}>
           {!collapsed && <span className="text-lg font-bold">Ew X Jul</span>}
           <button
-            onClick={() => setCollapsed(!collapsed)}
+            onClick={toggleCollapsed}
             className="p-1.5 rounded-md hover:bg-bg-hover text-text-secondary"
           >
             {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
