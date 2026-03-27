@@ -46,11 +46,11 @@ export default function ScanPage() {
     logsEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [job?.logs])
 
-  async function handleScan() {
+  async function handleScan(type: 'auto' | 'smart') {
     setError(null)
     setScanning(true)
     setJob(null)
-    const res = await fetch('/api/scan/auto', { method: 'POST' })
+    const res = await fetch(`/api/scan/${type}`, { method: 'POST' })
     const data = await res.json()
     if (!res.ok) {
       setError(data.error)
@@ -71,21 +71,44 @@ export default function ScanPage() {
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Scanner des prospects</h1>
 
-      {/* Launch button */}
-      <div className="card p-6 flex flex-col sm:flex-row items-start sm:items-center gap-4">
-        <div className="flex-1">
-          <p className="font-medium">Scan automatique</p>
-          <p className="text-sm text-text-secondary mt-1">
-            Recherche des entreprises <span className="text-accent font-medium">sans site internet</span> dans 10 secteurs et villes aléatoires en France.
-          </p>
+      {/* Scan buttons */}
+      <div className="grid sm:grid-cols-2 gap-4">
+        {/* Auto scan */}
+        <div className="card p-6 flex flex-col gap-4">
+          <div>
+            <p className="font-medium">Scan rapide</p>
+            <p className="text-sm text-text-secondary mt-1">
+              Recherche via Apify Google Maps — rapide, idéal pour un premier scan.
+            </p>
+          </div>
+          <button
+            onClick={() => handleScan('auto')}
+            disabled={scanning}
+            className="w-full px-6 py-3 bg-accent hover:bg-accent-hover text-white rounded-md font-semibold transition-colors disabled:opacity-50"
+          >
+            {scanning ? 'Scan en cours...' : '⚡ Scan rapide'}
+          </button>
         </div>
-        <button
-          onClick={handleScan}
-          disabled={scanning}
-          className="w-full sm:w-auto px-8 py-3 bg-accent hover:bg-accent-hover text-white rounded-md font-semibold transition-colors disabled:opacity-50 whitespace-nowrap"
-        >
-          {scanning ? 'Scan en cours...' : '⚡ Lancer le scan'}
-        </button>
+
+        {/* Smart scan */}
+        <div className="card p-6 flex flex-col gap-4 border border-accent/30">
+          <div>
+            <p className="font-medium flex items-center gap-2">
+              Smart Scan
+              <span className="text-xs bg-accent/20 text-accent px-2 py-0.5 rounded-full font-normal">11/10</span>
+            </p>
+            <p className="text-sm text-text-secondary mt-1">
+              Multi-sources (Serper + Pages Jaunes), audit complet (SSL, PageSpeed, CMS, vision IA), enrichissement email.
+            </p>
+          </div>
+          <button
+            onClick={() => handleScan('smart')}
+            disabled={scanning}
+            className="w-full px-6 py-3 bg-gradient-to-r from-accent to-purple-500 hover:from-accent-hover hover:to-purple-600 text-white rounded-md font-semibold transition-all disabled:opacity-50"
+          >
+            {scanning ? 'Scan en cours...' : '🚀 Smart Scan'}
+          </button>
+        </div>
       </div>
 
       {error && (
