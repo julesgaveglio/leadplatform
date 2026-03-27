@@ -73,114 +73,174 @@ export function LeadsTable({ leads }: LeadsTableProps) {
   }
 
   return (
-    <div className="card overflow-x-auto">
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="border-b border-border text-left text-text-secondary">
-            <th className="px-4 py-3 font-medium">Score</th>
-            <th className="px-4 py-3 font-medium">Entreprise</th>
-            <th className="px-4 py-3 font-medium">Secteur</th>
-            <th className="px-4 py-3 font-medium">Ville</th>
-            <th className="px-4 py-3 font-medium">Téléphone</th>
-            <th className="px-4 py-3 font-medium">Notes</th>
-            <th className="px-4 py-3 font-medium">Statut</th>
-            <th className="px-4 py-3 font-medium">Assigné</th>
-            <th className="px-4 py-3 font-medium text-center">Enrichir</th>
-            <th className="px-4 py-3 font-medium text-center">Site démo</th>
-          </tr>
-        </thead>
-        <tbody>
-          {leads.map((lead) => {
-            const enrichState = getEnrichState(lead)
-            const demoStatus = getDemoStatus(lead)
-            const ownerName = getOwnerName(lead)
-            const isDemoRunning = ['generating', 'deploying'].includes(demoStatus)
-            const isEnriching = enrichState === 'running' || demoStatus === 'scraping'
+    <div className="card overflow-hidden">
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm border-collapse">
+          <thead>
+            <tr className="border-b border-border text-left text-text-secondary bg-bg-hover/50">
+              {/* Score — toujours visible, fixe */}
+              <th className="px-3 py-3 font-medium w-14 text-center">Score</th>
 
-            return (
-              <tr key={lead.id} className="border-b border-border/50 hover:bg-bg-hover transition-colors">
-                <td className="px-4 py-3">
-                  <ScoreBadge score={lead.score} size={36} />
-                </td>
+              {/* Entreprise — toujours visible, prend l'espace restant */}
+              <th className="px-3 py-3 font-medium min-w-[160px]">Entreprise</th>
 
-                <td className="px-4 py-3">
-                  <div className="space-y-0.5">
-                    <Link href={`/leads/${lead.id}`} className="text-text-primary hover:text-accent font-medium">
-                      {lead.company_name}
-                    </Link>
-                    {ownerName && (
-                      <p className="text-xs text-text-secondary">👤 {ownerName}</p>
-                    )}
-                  </div>
-                </td>
+              {/* Secteur — masqué sur mobile */}
+              <th className="px-3 py-3 font-medium hidden md:table-cell w-28">Secteur</th>
 
-                <td className="px-4 py-3 text-text-secondary capitalize">{lead.sector ?? '—'}</td>
-                <td className="px-4 py-3 text-text-secondary">{lead.city ?? '—'}</td>
+              {/* Ville — masqué sur mobile */}
+              <th className="px-3 py-3 font-medium hidden sm:table-cell w-24">Ville</th>
 
-                <td className="px-4 py-3">
-                  {lead.phone
-                    ? <a href={`tel:${lead.phone}`} className="flex items-center gap-1 text-accent hover:underline"><Phone size={14} />{lead.phone}</a>
-                    : <span className="text-text-secondary">—</span>}
-                </td>
+              {/* Téléphone — masqué sur mobile */}
+              <th className="px-3 py-3 font-medium hidden md:table-cell w-36">Téléphone</th>
 
-                <td className="px-4 py-3 max-w-[200px]">
-                  {lead.notes
-                    ? <p className="text-xs text-text-secondary line-clamp-2">{lead.notes}</p>
-                    : <span className="text-text-secondary">—</span>}
-                </td>
+              {/* Notes — visible uniquement sur grand écran */}
+              <th className="px-3 py-3 font-medium hidden xl:table-cell">Notes</th>
 
-                <td className="px-4 py-3"><StatusBadge status={lead.status} /></td>
-                <td className="px-4 py-3 text-text-secondary capitalize">{lead.assigned_to ?? '—'}</td>
+              {/* Statut — toujours visible */}
+              <th className="px-3 py-3 font-medium w-28">Statut</th>
 
-                {/* Enrich */}
-                <td className="px-4 py-3 text-center">
-                  {isEnriching ? (
-                    <span className="inline-flex items-center gap-1 text-xs text-accent">
-                      <Loader2 size={13} className="animate-spin" /> Analyse...
-                    </span>
-                  ) : enrichState === 'done' ? (
-                    <div className="flex flex-col items-center gap-1">
-                      <span className="text-xs text-success flex items-center gap-1"><Check size={12} /> Enrichi</span>
-                      <button onClick={() => handleEnrich(lead)} className="text-xs text-text-secondary hover:text-text-primary flex items-center gap-0.5">
-                        <RotateCcw size={11} /> Relancer
-                      </button>
+              {/* Assigné — masqué sur petit écran */}
+              <th className="px-3 py-3 font-medium hidden lg:table-cell w-20 text-center">Assigné</th>
+
+              {/* Enrichir — toujours visible */}
+              <th className="px-3 py-3 font-medium w-24 text-center">Enrichir</th>
+
+              {/* Site démo — toujours visible */}
+              <th className="px-3 py-3 font-medium w-28 text-center">Site démo</th>
+            </tr>
+          </thead>
+          <tbody>
+            {leads.map((lead) => {
+              const enrichState = getEnrichState(lead)
+              const demoStatus = getDemoStatus(lead)
+              const ownerName = getOwnerName(lead)
+              const isDemoRunning = ['generating', 'deploying'].includes(demoStatus)
+              const isEnriching = enrichState === 'running' || demoStatus === 'scraping'
+
+              return (
+                <tr key={lead.id} className="border-b border-border/40 hover:bg-bg-hover/60 transition-colors">
+
+                  {/* Score */}
+                  <td className="px-3 py-3 text-center">
+                    <ScoreBadge score={lead.score} size={34} />
+                  </td>
+
+                  {/* Entreprise + owner */}
+                  <td className="px-3 py-3">
+                    <div>
+                      <Link href={`/leads/${lead.id}`} className="font-medium hover:text-accent transition-colors">
+                        {lead.company_name}
+                      </Link>
+                      {ownerName && (
+                        <p className="text-xs text-text-secondary mt-0.5">👤 {ownerName}</p>
+                      )}
                     </div>
-                  ) : (
-                    <button
-                      onClick={() => handleEnrich(lead)}
-                      className="inline-flex items-center gap-1 text-xs px-3 py-1.5 border border-border hover:bg-bg-hover rounded transition-colors"
-                    >
-                      <Search size={13} /> Enrichir
-                    </button>
-                  )}
-                </td>
+                  </td>
 
-                {/* Site démo */}
-                <td className="px-4 py-3 text-center">
-                  {demoStatus === 'deployed' && lead.demo_url ? (
-                    <a href={lead.demo_url} target="_blank" rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-xs text-success hover:underline">
-                      <ExternalLink size={13} /> Voir
-                    </a>
-                  ) : isDemoRunning ? (
-                    <span className="inline-flex items-center gap-1 text-xs text-accent">
-                      <Loader2 size={13} className="animate-spin" />
-                      {demoStatus === 'generating' ? 'Génération...' : 'Déploiement...'}
-                    </span>
-                  ) : (
-                    <button
-                      onClick={() => handleGenerate(lead)}
-                      className="inline-flex items-center gap-1 text-xs px-3 py-1.5 bg-accent hover:bg-accent-hover text-white rounded transition-colors"
-                    >
-                      <Sparkles size={13} /> Générer
-                    </button>
-                  )}
-                </td>
-              </tr>
-            )
-          })}
-        </tbody>
-      </table>
+                  {/* Secteur */}
+                  <td className="px-3 py-3 hidden md:table-cell text-text-secondary capitalize text-xs">
+                    {lead.sector ?? '—'}
+                  </td>
+
+                  {/* Ville */}
+                  <td className="px-3 py-3 hidden sm:table-cell text-text-secondary text-xs">
+                    {lead.city ?? '—'}
+                  </td>
+
+                  {/* Téléphone */}
+                  <td className="px-3 py-3 hidden md:table-cell">
+                    {lead.phone
+                      ? (
+                        <a href={`tel:${lead.phone}`} className="flex items-center gap-1 text-accent hover:underline text-xs">
+                          <Phone size={12} />{lead.phone}
+                        </a>
+                      )
+                      : <span className="text-text-secondary text-xs">—</span>}
+                  </td>
+
+                  {/* Notes */}
+                  <td className="px-3 py-3 hidden xl:table-cell max-w-[220px]">
+                    {lead.notes
+                      ? <p className="text-xs text-text-secondary line-clamp-2 leading-relaxed">{lead.notes}</p>
+                      : <span className="text-text-secondary text-xs">—</span>}
+                  </td>
+
+                  {/* Statut */}
+                  <td className="px-3 py-3">
+                    <StatusBadge status={lead.status} />
+                  </td>
+
+                  {/* Assigné */}
+                  <td className="px-3 py-3 hidden lg:table-cell text-center text-text-secondary text-xs capitalize">
+                    {lead.assigned_to ?? '—'}
+                  </td>
+
+                  {/* Enrichir */}
+                  <td className="px-3 py-3 text-center">
+                    {isEnriching ? (
+                      <span className="inline-flex items-center gap-1 text-xs text-accent">
+                        <Loader2 size={12} className="animate-spin" />
+                        <span className="hidden sm:inline">Analyse...</span>
+                      </span>
+                    ) : enrichState === 'done' ? (
+                      <div className="flex flex-col items-center gap-1">
+                        <span className="text-xs text-success flex items-center gap-1">
+                          <Check size={12} />
+                          <span className="hidden sm:inline">Enrichi</span>
+                        </span>
+                        <button
+                          onClick={() => handleEnrich(lead)}
+                          className="text-xs text-text-secondary hover:text-text-primary flex items-center gap-0.5"
+                        >
+                          <RotateCcw size={10} />
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => handleEnrich(lead)}
+                        className="inline-flex items-center gap-1 text-xs px-2.5 py-1.5 border border-border hover:bg-bg-hover rounded transition-colors whitespace-nowrap"
+                      >
+                        <Search size={12} />
+                        <span className="hidden sm:inline">Enrichir</span>
+                      </button>
+                    )}
+                  </td>
+
+                  {/* Site démo */}
+                  <td className="px-3 py-3 text-center">
+                    {demoStatus === 'deployed' && lead.demo_url ? (
+                      <a
+                        href={lead.demo_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-xs text-success hover:underline whitespace-nowrap"
+                      >
+                        <ExternalLink size={12} />
+                        <span className="hidden sm:inline">Voir</span>
+                      </a>
+                    ) : isDemoRunning ? (
+                      <span className="inline-flex items-center gap-1 text-xs text-accent">
+                        <Loader2 size={12} className="animate-spin" />
+                        <span className="hidden sm:inline">
+                          {demoStatus === 'generating' ? 'IA...' : 'Deploy...'}
+                        </span>
+                      </span>
+                    ) : (
+                      <button
+                        onClick={() => handleGenerate(lead)}
+                        className="inline-flex items-center gap-1 text-xs px-2.5 py-1.5 bg-accent hover:bg-accent-hover text-white rounded transition-colors whitespace-nowrap"
+                      >
+                        <Sparkles size={12} />
+                        <span className="hidden sm:inline">Générer</span>
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
     </div>
   )
 }
