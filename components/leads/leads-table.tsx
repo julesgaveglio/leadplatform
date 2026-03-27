@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { Fragment, useState } from 'react'
 import Link from 'next/link'
 import type { Lead } from '@/lib/types/database'
 import { ScoreBadge } from '@/components/ui/score-badge'
@@ -85,8 +85,8 @@ export function LeadsTable({ leads }: LeadsTableProps) {
             const pitchExpanded = expandedPitch === lead.id
 
             return (
-              <>
-                <tr key={lead.id} className="border-b border-border/50 hover:bg-bg-hover transition-colors">
+              <Fragment key={lead.id}>
+                <tr className="border-b border-border/50 hover:bg-bg-hover transition-colors">
                   <td className="px-4 py-3">
                     <ScoreBadge score={lead.score} size={36} />
                   </td>
@@ -161,7 +161,7 @@ export function LeadsTable({ leads }: LeadsTableProps) {
 
                 {/* Pitch row */}
                 {hasPitch && pitchExpanded && (
-                  <tr key={`${lead.id}-pitch`} className="bg-accent/5 border-b border-border/50">
+                  <tr className="bg-accent/5 border-b border-border/50">
                     <td colSpan={8} className="px-6 py-3">
                       <div className="flex items-start gap-3">
                         <div className="flex-1">
@@ -179,7 +179,7 @@ export function LeadsTable({ leads }: LeadsTableProps) {
                     </td>
                   </tr>
                 )}
-              </>
+              </Fragment>
             )
           })}
         </tbody>
