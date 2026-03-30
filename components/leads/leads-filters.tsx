@@ -1,6 +1,6 @@
 'use client'
 
-import type { LeadStatus, AssignedTo } from '@/lib/types/database'
+import type { LeadStatus, AssignedTo, LeadCategory, IndustryTier } from '@/lib/types/database'
 
 interface FiltersState {
   search: string
@@ -8,6 +8,8 @@ interface FiltersState {
   assignedTo: AssignedTo | ''
   city: string
   minScore: number
+  industry: string
+  industryTier: IndustryTier | ''
 }
 
 interface LeadsFiltersProps {
@@ -15,9 +17,10 @@ interface LeadsFiltersProps {
   onChange: (filters: FiltersState) => void
   view: 'table' | 'kanban' | 'import'
   onViewChange: (view: 'table' | 'kanban' | 'import') => void
+  category: LeadCategory
 }
 
-export function LeadsFilters({ filters, onChange, view, onViewChange }: LeadsFiltersProps) {
+export function LeadsFilters({ filters, onChange, view, onViewChange, category }: LeadsFiltersProps) {
   return (
     <div className="card p-4 flex flex-wrap gap-3 items-center">
       {view !== 'import' && (
@@ -38,6 +41,7 @@ export function LeadsFilters({ filters, onChange, view, onViewChange }: LeadsFil
             <option value="to_call">À appeler</option>
             <option value="contacted">Contacté</option>
             <option value="demo_sent">Démo envoyée</option>
+            <option value="proposal_sent">Proposition envoyée</option>
             <option value="sold">Vendu</option>
             <option value="refused">Refus</option>
           </select>
@@ -68,6 +72,28 @@ export function LeadsFilters({ filters, onChange, view, onViewChange }: LeadsFil
               className="px-2 py-1.5 bg-bg border border-border rounded-md text-sm text-text-primary w-16 font-mono"
             />
           </div>
+
+          {/* Filtres spécifiques Automatisation IA */}
+          {category === 'automation_ai' && (
+            <>
+              <input
+                type="text"
+                placeholder="Secteur..."
+                value={filters.industry}
+                onChange={e => onChange({ ...filters, industry: e.target.value })}
+                className="px-3 py-1.5 bg-bg border border-border rounded-md text-sm text-text-primary w-36"
+              />
+              <select
+                value={filters.industryTier}
+                onChange={e => onChange({ ...filters, industryTier: e.target.value as IndustryTier | '' })}
+                className="px-3 py-1.5 bg-bg border border-border rounded-md text-sm text-text-primary"
+              >
+                <option value="">Tous les tiers</option>
+                <option value="tier_1">Tier 1</option>
+                <option value="tier_2">Tier 2</option>
+              </select>
+            </>
+          )}
         </>
       )}
 
