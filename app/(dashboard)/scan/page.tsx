@@ -4,33 +4,59 @@ import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import type { ScrapingJob } from '@/lib/types/database'
 
+type ScanCategory = 'site_web' | 'automation_ai'
 type Country = 'fr' | 'nz'
 
-const COUNTRY_CONFIG = {
-  fr: {
-    flag: '🇫🇷',
-    label: 'France',
-    description: 'Multi-sources (Serper + Pages Jaunes), audit complet (SSL, PageSpeed, CMS, vision IA), enrichissement email.',
-    endpoint: '/api/scan/smart',
-    scanLabel: 'Lancer le scan France',
+const SCAN_CONFIG: Record<ScanCategory, Record<Country, {
+  endpoint: string
+  scanLabel: string
+  description: string
+}>> = {
+  site_web: {
+    fr: {
+      endpoint: '/api/scan/smart',
+      scanLabel: 'Lancer le scan Site Web France',
+      description: 'Multi-sources (Serper + Pages Jaunes), audit complet (SSL, PageSpeed, CMS, vision IA), enrichissement email. Cible les entreprises sans site web.',
+    },
+    nz: {
+      endpoint: '/api/scan/smart-nz',
+      scanLabel: 'Lancer le scan Site Web NZ',
+      description: 'Google Maps (Serper), audit complet, enrichissement email. Secteurs adaptés au marché NZ. Cible les entreprises sans site web.',
+    },
   },
-  nz: {
-    flag: '🇳🇿',
-    label: 'Nouvelle-Zélande',
-    description: 'Google Maps (Serper), audit complet (SSL, PageSpeed, CMS, vision IA), enrichissement email. Secteurs adaptés au marché NZ.',
-    endpoint: '/api/scan/smart-nz',
-    scanLabel: 'Lancer le scan NZ',
+  automation_ai: {
+    fr: {
+      endpoint: '/api/scan/smart-ai-fr',
+      scanLabel: 'Lancer le scan Auto IA France',
+      description: 'Cible les entreprises avec site web dans les secteurs à fort potentiel IA (juridique, conseil, e-commerce, santé). Scoring par tier + avis Google.',
+    },
+    nz: {
+      endpoint: '/api/scan/smart-ai-nz',
+      scanLabel: 'Lancer le scan Auto IA NZ',
+      description: 'Cible les entreprises NZ avec site web (professional services, e-commerce, santé). Scoring par tier + avis Google.',
+    },
   },
 }
 
+const CATEGORY_TABS: { key: ScanCategory; icon: string; label: string }[] = [
+  { key: 'site_web', icon: '🌐', label: 'Site Web' },
+  { key: 'automation_ai', icon: '🤖', label: 'Automatisation IA' },
+]
+
+const GEO_TABS: { key: Country; flag: string; label: string }[] = [
+  { key: 'fr', flag: '🇫🇷', label: 'France' },
+  { key: 'nz', flag: '🇳🇿', label: 'Nouvelle-Zélande' },
+]
+
 export default function ScanPage() {
+  const [category, setCategory] = useState<ScanCategory>('site_web')
   const [country, setCountry] = useState<Country>('fr')
   const [job, setJob] = useState<ScrapingJob | null>(null)
   const [scanning, setScanning] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const logsEndRef = useRef<HTMLDivElement>(null)
 
-  const config = COUNTRY_CONFIG[country]
+  const config = SCAN_CONFIG[category][country]
 
   // Restore active job on mount
   useEffect(() => {
@@ -93,35 +119,58 @@ export default function ScanPage() {
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Scanner des prospects</h1>
 
-      {/* Country selector */}
-      <div className="card p-1.5 flex gap-1.5 w-fit">
-        {(Object.keys(COUNTRY_CONFIG) as Country[]).map((c) => {
-          const cfg = COUNTRY_CONFIG[c]
-          const isActive = country === c
+      {/* Level 1: Category */}
+      <div className="card p-1 flex gap-1 w-fit">
+        {CATEGORY_TABS.map(({ key, icon, label }) => {
+          const isActive = category === key
           return (
             <button
-              key={c}
-              onClick={() => { setCountry(c); setError(null) }}
+              key={key}
+              onClick={() => { setCategory(key); setError(null) }}
               disabled={scanning}
-              className={`flex items-center gap-2 px-4 py-2 rounded text-sm font-medium transition-colors disabled:opacity-50 ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-colors disabled:opacity-50 ${
                 isActive
                   ? 'bg-accent text-white'
-                  : 'text-text-secondary hover:text-text-primary hover:bg-bg'
+                  : 'text-text-secondary hover:text-text-primary hover:bg-bg-hover'
               }`}
             >
-              <span className="text-base">{cfg.flag}</span>
-              <span>{cfg.label}</span>
+              <span>{icon}</span>
+              <span className="hidden sm:inline">{label}</span>
             </button>
           )
         })}
       </div>
 
-      {/* Smart scan card */}
+      {/* Level 2: Geo */}
+      <div className="flex gap-2">
+        {GEO_TABS.map(({ key, flag, label }) => {
+          const isActive = country === key
+          return (
+            <button
+              key={key}
+              onClick={() => { setCountry(key); setError(null) }}
+              disabled={scanning}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors border disabled:opacity-50 ${
+                isActive
+                  ? 'border-accent bg-accent/10 text-accent'
+                  : 'border-border text-text-secondary hover:text-text-primary hover:bg-bg-hover'
+              }`}
+            >
+              <span>{flag}</span>
+              <span className="hidden sm:inline">{label}</span>
+            </button>
+          )
+        })}
+      </div>
+
+      {/* Scan card */}
       <div className="card p-6 flex flex-col sm:flex-row items-start sm:items-center gap-4">
         <div className="flex-1">
-          <p className="font-medium flex items-center gap-2">
-            <span className="text-xl">{config.flag}</span>
-            Smart Scan {config.label}
+          <p className="font-medium">
+            {CATEGORY_TABS.find(t => t.key === category)?.icon}{' '}
+            {CATEGORY_TABS.find(t => t.key === category)?.label}{' '}
+            {GEO_TABS.find(t => t.key === country)?.flag}{' '}
+            {GEO_TABS.find(t => t.key === country)?.label}
           </p>
           <p className="text-sm text-text-secondary mt-1">{config.description}</p>
         </div>
