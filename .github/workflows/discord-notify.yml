@@ -42,7 +42,7 @@ jobs:
           ")
 
           RESPONSE=$(curl -s https://api.anthropic.com/v1/messages \
-            -H "x-api-key: ${{ secrets.ANTHROPIC_API_KEY }}" \
+            -H "x-api-key: ${{ secrets.CLEAPI }}" \
             -H "anthropic-version: 2023-06-01" \
             -H "content-type: application/json" \
             -d "$PAYLOAD")
@@ -78,7 +78,7 @@ jobs:
 
           data = json.dumps(payload).encode()
           req = urllib.request.Request(
-            '${{ secrets.DISCORD_WEBHOOK_URL }}',
+            '${{ secrets.DISCORD }}',
             data=data,
             headers={'Content-Type': 'application/json'},
             method='POST'
