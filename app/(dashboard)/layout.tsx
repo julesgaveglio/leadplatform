@@ -6,7 +6,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <div className="min-h-screen relative overflow-hidden">
       {/* Ethereal shadow — top */}
-      <div className="pointer-events-none fixed -top-[20%] -left-[10%] w-[80vw] h-[80vh] opacity-[0.5] z-0">
+      <div className="pointer-events-none fixed -top-[20%] -left-[10%] w-[80vw] h-[80vh] opacity-[0.25] z-0">
         <EtherealShadow
           color="rgba(99, 102, 241, 1)"
           animation={{ scale: 80, speed: 60 }}
@@ -14,7 +14,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         />
       </div>
       {/* Ethereal shadow — bottom right */}
-      <div className="pointer-events-none fixed -bottom-[20%] -right-[10%] w-[80vw] h-[80vh] opacity-[0.4] z-0">
+      <div className="pointer-events-none fixed -bottom-[20%] -right-[10%] w-[80vw] h-[80vh] opacity-[0.2] z-0">
         <EtherealShadow
           color="rgba(79, 70, 229, 1)"
           animation={{ scale: 60, speed: 50 }}
@@ -22,7 +22,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         />
       </div>
       {/* Decorative globe background */}
-      <div className="pointer-events-none fixed -right-[20vw] top-1/2 -translate-y-1/2 w-[70vw] max-w-[800px] opacity-[0.18] z-0">
+      <div className="pointer-events-none fixed -right-[20vw] top-1/2 -translate-y-1/2 w-[70vw] max-w-[800px] opacity-[0.30] z-0">
         <GlobePulse speed={0.002} />
       </div>
       <Sidebar />
