@@ -1,0 +1,88 @@
+name: Notify Discord on push
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Get diff summary
+        id: diff
+        run: |
+          DIFF=$(git diff HEAD~1 HEAD --stat)
+          echo "diff<<EOF" >> $GITHUB_OUTPUT
+          echo "$DIFF" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Ask Claude to explain
+        id: claude
+        run: |
+          DIFF='${{ steps.diff.outputs.diff }}'
+          COMMIT_MSG='${{ github.event.head_commit.message }}'
+
+          PAYLOAD=$(python3 -c "
+          import json, sys
+          msg = '''Résume en 2-3 phrases en français ce que fait ce commit pour une équipe non-technique. Sois concis et clair.
+
+          Message du commit: $COMMIT_MSG
+
+          Fichiers modifiés:
+          $DIFF'''
+          print(json.dumps({
+            'model': 'claude-haiku-4-5-20251001',
+            'max_tokens': 300,
+            'messages': [{'role': 'user', 'content': msg}]
+          }))
+          ")
+
+          RESPONSE=$(curl -s https://api.anthropic.com/v1/messages \
+            -H "x-api-key: ${{ secrets.ANTHROPIC_API_KEY }}" \
+            -H "anthropic-version: 2023-06-01" \
+            -H "content-type: application/json" \
+            -d "$PAYLOAD")
+
+          SUMMARY=$(echo "$RESPONSE" | python3 -c "import sys,json; print(json.load(sys.stdin)['content'][0]['text'])")
+          echo "summary<<EOF" >> $GITHUB_OUTPUT
+          echo "$SUMMARY" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Post to Discord
+        run: |
+          SUMMARY='${{ steps.claude.outputs.summary }}'
+          COMMIT_MSG='${{ github.event.head_commit.message }}'
+          AUTHOR='${{ github.event.head_commit.author.name }}'
+          COMMIT_URL='${{ github.event.head_commit.url }}'
+
+          python3 -c "
+          import json, urllib.request
+
+          payload = {
+            'embeds': [{
+              'title': '🚀 Mise à jour de la plateforme',
+              'url': '$COMMIT_URL',
+              'description': '''$SUMMARY''',
+              'color': 5763719,
+              'fields': [
+                {'name': '📝 Commit', 'value': '\`$COMMIT_MSG\`', 'inline': False},
+                {'name': '👤 Par', 'value': '$AUTHOR', 'inline': True},
+                {'name': '🌿 Branche', 'value': 'main', 'inline': True},
+              ]
+            }]
+          }
+
+          data = json.dumps(payload).encode()
+          req = urllib.request.Request(
+            '${{ secrets.DISCORD_WEBHOOK_URL }}',
+            data=data,
+            headers={'Content-Type': 'application/json'},
+            method='POST'
+          )
+          urllib.request.urlopen(req)
+          print('Discord notified.')
+          "
