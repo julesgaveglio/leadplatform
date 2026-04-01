@@ -5,8 +5,8 @@ import { EtherealShadow } from '@/components/ui/ethereal-shadow'
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen relative overflow-hidden">
-      {/* Ethereal shadow — top-left accent */}
-      <div className="pointer-events-none fixed -left-[10vw] -top-[10vh] w-[60vw] h-[60vh] opacity-[0.45] z-0">
+      {/* Ethereal shadow — full screen */}
+      <div className="pointer-events-none fixed inset-0 w-full h-full opacity-[0.45] z-0">
         <EtherealShadow
           color="rgba(99, 102, 241, 1)"
           animation={{ scale: 80, speed: 60 }}
