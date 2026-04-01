@@ -104,10 +104,7 @@ export function EtherealShadow({
         <div
           style={{
             backgroundColor: color,
-            maskImage: `url('https://framerusercontent.com/images/ceBGguIpUU8luwByxuQz79t7To.png')`,
-            maskSize: sizing === 'stretch' ? '100% 100%' : 'cover',
-            maskRepeat: 'no-repeat',
-            maskPosition: 'center',
+            maskImage: `radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, transparent 100%)`,
             width: '100%',
             height: '100%',
           }}
