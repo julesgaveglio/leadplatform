@@ -12,76 +12,61 @@ jobs:
         with:
           fetch-depth: 2
 
-      - name: Get diff and ask Claude
+      - name: Ask Claude to explain
         id: claude
         env:
           ANTHROPIC_API_KEY: ${{ secrets.CLEAPI }}
-          COMMIT_MSG: ${{ github.event.head_commit.message }}
-          AUTHOR: ${{ github.event.head_commit.author.name }}
         run: |
           DIFF=$(git diff HEAD~1 HEAD --stat)
+          COMMIT_MSG="${{ github.event.head_commit.message }}"
 
-          SUMMARY=$(python3 - <<PYEOF
-          import json, urllib.request, os
+          BODY=$(jq -n \
+            --arg diff "$DIFF" \
+            --arg msg "$COMMIT_MSG" \
+            '{
+              model: "claude-haiku-4-5-20251001",
+              max_tokens: 300,
+              messages: [{
+                role: "user",
+                content: ("Résume en 2-3 phrases en français ce que fait ce commit pour une équipe non-technique.\n\nCommit: " + $msg + "\n\nFichiers modifiés:\n" + $diff)
+              }]
+            }')
 
-          commit_msg = os.environ.get("COMMIT_MSG", "")
-          diff = """$DIFF"""
+          RESPONSE=$(curl -s https://api.anthropic.com/v1/messages \
+            -H "x-api-key: $ANTHROPIC_API_KEY" \
+            -H "anthropic-version: 2023-06-01" \
+            -H "content-type: application/json" \
+            -d "$BODY")
 
-          payload = json.dumps({
-            "model": "claude-haiku-4-5-20251001",
-            "max_tokens": 300,
-            "messages": [{
-              "role": "user",
-              "content": f"Résume en 2-3 phrases en français ce que fait ce commit pour une équipe non-technique. Sois concis.\n\nCommit: {commit_msg}\n\nFichiers modifiés:\n{diff}"
-            }]
-          }).encode()
-
-          req = urllib.request.Request(
-            "https://api.anthropic.com/v1/messages",
-            data=payload,
-            headers={
-              "x-api-key": os.environ["ANTHROPIC_API_KEY"],
-              "anthropic-version": "2023-06-01",
-              "content-type": "application/json"
-            }
-          )
-          res = json.loads(urllib.request.urlopen(req).read())
-          print(res["content"][0]["text"])
-          PYEOF
-          )
-
+          SUMMARY=$(echo "$RESPONSE" | jq -r '.content[0].text')
           echo "summary=$SUMMARY" >> $GITHUB_OUTPUT
 
       - name: Post to Discord
-        env:
-          DISCORD_URL: ${{ secrets.DISCORD }}
-          COMMIT_MSG: ${{ github.event.head_commit.message }}
-          COMMIT_URL: ${{ github.event.head_commit.url }}
-          AUTHOR: ${{ github.event.head_commit.author.name }}
-          SUMMARY: ${{ steps.claude.outputs.summary }}
         run: |
-          python3 - <<PYEOF
-          import json, urllib.request, os
+          SUMMARY="${{ steps.claude.outputs.summary }}"
+          COMMIT_MSG="${{ github.event.head_commit.message }}"
+          AUTHOR="${{ github.event.head_commit.author.name }}"
+          COMMIT_URL="${{ github.event.head_commit.url }}"
 
-          payload = json.dumps({
-            "embeds": [{
-              "title": "🚀 Mise à jour de la plateforme",
-              "url": os.environ.get("COMMIT_URL", ""),
-              "description": os.environ.get("SUMMARY", "Aucun résumé disponible."),
-              "color": 5763719,
-              "fields": [
-                {"name": "📝 Commit", "value": f"`{os.environ.get('COMMIT_MSG', '')}`", "inline": False},
-                {"name": "👤 Par", "value": os.environ.get("AUTHOR", ""), "inline": True},
-                {"name": "🌿 Branche", "value": "main", "inline": True}
-              ]
-            }]
-          }).encode()
+          BODY=$(jq -n \
+            --arg summary "$SUMMARY" \
+            --arg commit "$COMMIT_MSG" \
+            --arg author "$AUTHOR" \
+            --arg url "$COMMIT_URL" \
+            '{
+              embeds: [{
+                title: "🚀 Mise à jour de la plateforme",
+                url: $url,
+                description: $summary,
+                color: 5763719,
+                fields: [
+                  {name: "📝 Commit", value: $commit, inline: false},
+                  {name: "👤 Par", value: $author, inline: true},
+                  {name: "🌿 Branche", value: "main", inline: true}
+                ]
+              }]
+            }')
 
-          req = urllib.request.Request(
-            os.environ["DISCORD_URL"],
-            data=payload,
-            headers={"Content-Type": "application/json"}
-          )
-          urllib.request.urlopen(req)
-          print("Discord notified.")
-          PYEOF
+          curl -s -X POST "${{ secrets.DISCORD }}" \
+            -H "Content-Type: application/json" \
+            -d "$BODY"
