@@ -5,20 +5,13 @@ import { EtherealShadow } from '@/components/ui/ethereal-shadow'
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen relative overflow-hidden">
-      {/* Ethereal shadow — top */}
-      <div className="pointer-events-none fixed -top-[20%] -left-[10%] w-[80vw] h-[80vh] opacity-[0.25] z-0">
+      {/* Ethereal shadow — full screen centered */}
+      <div className="pointer-events-none fixed inset-0 w-full h-full opacity-[0.22] z-0">
         <EtherealShadow
           color="rgba(99, 102, 241, 1)"
-          animation={{ scale: 80, speed: 60 }}
+          animation={{ scale: 70, speed: 55 }}
           noise={{ opacity: 0.3, scale: 1.2 }}
-        />
-      </div>
-      {/* Ethereal shadow — bottom right */}
-      <div className="pointer-events-none fixed -bottom-[20%] -right-[10%] w-[80vw] h-[80vh] opacity-[0.2] z-0">
-        <EtherealShadow
-          color="rgba(79, 70, 229, 1)"
-          animation={{ scale: 60, speed: 50 }}
-          noise={{ opacity: 0.3, scale: 1.2 }}
+          sizing="stretch"
         />
       </div>
       {/* Decorative globe background */}
